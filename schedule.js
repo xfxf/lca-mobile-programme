@@ -1,6 +1,6 @@
 /*
 lca-mobile-programme - Mobile viewer for Zookeepr schedule JSON.
-Copyright 2013-2016 Michael Farrell
+Copyright 2013-2017 Michael Farrell
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ function displayAbout() {
 	
 	$('#scheduleContainer').empty().append(
 		$('<p>').text(
-			'This is a semi-official service using data parsed from Pycon Australia 2016\'s JSON calendar feed.  This information may not be current -- it is designed to be dropped onto Zookeepr later (so UI is all in Javascript).  Please direct feedback to micolous on #pycon-au.'
+			'This is a semi-official service using data parsed from Pycon Australia 2017\'s JSON calendar feed.  This information may not be current -- it is designed to be dropped onto Zookeepr later (so UI is all in Javascript).  Please direct feedback to micolous on #pycon-au.'
 		)
 	).append(
 		$('<p>').append(
