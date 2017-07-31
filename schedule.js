@@ -1,5 +1,5 @@
 /*
-lca-mobile-programme - Mobile viewer for Zookeepr schedule JSON.
+lca-mobile-programme - Mobile viewer for Symposion schedule JSON.
 Copyright 2013-2017 Michael Farrell
 
 This program is free software; you can redistribute it and/or modify
@@ -24,12 +24,6 @@ function timeFormat(input) {
 }
 
 function isoDate(input) {
-	// format the date
-	// because 0-index months are a GREAT idea
-
-	//var mo = Math.abs(input.getMonth() + 1);
-	//var da = Math.abs(input.getDate());
-	//return input.getFullYear() + '-' + (mo < 10 ? '0' + mo : mo) + '-' + (da < 10 ? '0' + da : da);
 	return input.format('YYYY-MM-DD');
 }
 
@@ -97,14 +91,8 @@ function displaySchedule(date) {
 			);
 		}
 
-		var label = e.room + ': ' + e.name + ' ' + (e.presenter ? '- ' + e.presenter : '') + ' (until ' + timeFormat(e.end) + ')';
-		if (e.description == '') {
-			if (e.uri == null) {
-				var item = $('<li>').text(label);
-			} else {
-				var item = $('<li>').append($('<a>').attr({'href': e.uri, 'rel': 'external'}).text(label));
-			}
-		} else {
+		var label = (e.room ? (e.room + ': ') : '') + e['name'] + ' ' + (e.presenter ? '- ' + e.presenter : '') + ' (until ' + timeFormat(e.end) + ')';
+		if (e.description) {
 			// show local description text
 			var item = $('<li>').append($('<a>').bind('click', function(evt) {
 				$('.descriptionPopup[data-event-id=' + e.id + ']')
@@ -116,6 +104,12 @@ function displaySchedule(date) {
 						shadow: true,
 					});
 			}).text(label));
+		} else {
+			if (e.uri == null) {
+				var item = $('<li>').text(label);
+			} else {
+				var item = $('<li>').append($('<a>').attr({'href': e.uri, 'rel': 'external'}).text(label));
+			}
 		}
 		$('#scheduleList').append(item);
 	});
@@ -128,12 +122,12 @@ function displayAbout() {
 	
 	$('#scheduleContainer').empty().append(
 		$('<p>').text(
-			'This is a semi-official service using data parsed from Pycon Australia 2017\'s JSON calendar feed.  This information may not be current -- it is designed to be dropped onto Zookeepr later (so UI is all in Javascript).  Please direct feedback to micolous on #pycon-au.'
+                        'This is a semi-official service using data parsed from Pycon Australia 2017\'s JSON calendar feed.  This information may not be current, as it uses a cached version of the data.  Please direct feedback to micolous on #pycon-au.'
 		)
 	).append(
 		$('<p>').append(
 			$('<a>').attr({
-				'href': 'https://github.com/micolous/lca-mobile-programme',
+				'href': 'https://github.com/micolous/lca-mobile-programme/tree/lca2017',
 				'rel': 'external'
 			}).text('Git repository')
 		)
@@ -184,12 +178,11 @@ function displayDaySelector() {
 	$('#scheduleContainer').append(
 		$('<p>').append(
 			$('<img>').attr('src', 'images/qr.png')
-		)
-	).append(
-		$('<p>').text('http://schedule.pycon-au.org/')
+		),
+		$('<p>').text('http://schedule.pycon-au.org')
 	);
 	
-	$('#title').text('Pycon AU ' + (moment(dates[0]).format('YYYY')) + ' Mobile Programme');
+	$('#title').text('Unofficial LCA' + (moment(dates[0]).format('YYYY')) + ' Mobile Programme');
 	endPage();
 }
 
@@ -211,28 +204,62 @@ $(function(){
 	}
 
 	$('#descriptionContainer').trigger('destroy').empty();
-	$.each(schedule_raw, function(i, e) {
+	$.each(schedule_raw['schedule'], function(i, e) {
 		// reformat the object in to something that is a bit more readable
-		var duration = parseTimeDelta(e.Duration);
-		var start = moment(e.Start.replace(' ', 'T'));
+		var authors = '';
+		if (e.authors) {
+			$.each(e.authors, function(ia, a) {
+				if (ia > 0) {
+					authors += ', ';
+				}
+			
+				authors += a;
+			});
+		}
+		
+		if (e.kind == 'shortbreak') {
+			// skip this item
+			return true;
+		}
+		
+		// Data normalisation is hard.
+		// Lets play it by ear.
+		// Display the Kind and Name by default (this means lots of data)
+		// This is when we have no idea what is going on (miniconfs)
+		var name = e.kind + ' - ' + e['name'];
+		
+		if (e.kind == 'talk' || e.kind == 'tutorial') {
+			if (e['name'] == 'Slot') {
+				// Empty talk slot, skip
+				return true;
+			}
+
+			// Display only the Name
+			// Most events are like this
+			name = e['name'];
+		}
+		
+		if (e['name'] == 'Slot') {
+			// Display only the Kind
+			// Food events are like this.
+			name = e.kind;
+		}
 		
 		e = {
-			'description': e.Description,
-			'id': e.Id,
-			// wat, why is there even spaces
-			'room': e['Room Name'],
-			'name': e.Title,
-			// no tzinfo on the start time, wat
-			'start': start,
-			'presenter': e.Presenters,
-			'uri': e.URL,
-			'durationMins': duration,
-			'end': moment(start).add('minutes', duration) 
-		}
+			'description': e.abstract,
+			'id': e.conf_key,
+			'room': e.room,
+			'name': name,
+			'start': moment(e.start),
+			'presenter': authors,
+			'uri': e.conf_url,
+			'end': moment(e.end)
+		};
+		
 		schedule.push(e);
 
 		// push event descriptions into dom popups
-		if (e.description != null && e.description != '') {
+		if (e.description && (e.description != '')) {
 			var descriptionDiv = $('<div>')
 				.attr({
 					'data-role': 'main',
