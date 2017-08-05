@@ -122,12 +122,12 @@ function displayAbout() {
 	
 	$('#scheduleContainer').empty().append(
 		$('<p>').text(
-                        'This is a semi-official service using data parsed from Pycon Australia 2017\'s JSON calendar feed.  This information may not be current, as it uses a cached version of the data.  Please direct feedback to micolous on #pycon-au.'
+                        'This is a semi-official service using data parsed from Pycon Australia 2017\'s JSON calendar feed.  This information may not be current, as it uses a cached version of the data.  Please direct feedback to micolous on pycon\'s Slack.'
 		)
 	).append(
 		$('<p>').append(
 			$('<a>').attr({
-				'href': 'https://github.com/micolous/lca-mobile-programme/tree/lca2017',
+				'href': 'https://github.com/xfxf/pyconau-2016-mobile-programme/',
 				'rel': 'external'
 			}).text('Git repository')
 		)
